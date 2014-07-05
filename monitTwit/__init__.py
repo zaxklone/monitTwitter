@@ -9,21 +9,26 @@ from collections import defaultdict
 class ProcessTweets:
     #init method for the creditionals
     def __init__(self, ak="",ap="", at="", ats="" ):
-        self.api_key = ak
-        self.api_secret = ap
-        self.access_token = at
-        self.access_token_secret = ats
+
+        self.auth = None
 
         self.username = 'unknown'
         self.tweets = None
+        self.searchTweets = []
         self.result = None
         self.dayDict = None
-
-
+   
+    def setAuth(self, api_key="",api_secret="", access_token="", access_token_secret="" ):
+        try:
+            self.auth = t.OAuthHandler( api_key, api_secret)
+            self.auth.set_access_token(access_token, access_token_secret)
+            return True
+        except Error,e :
+            print (e)
+            return False
+      
     def getUserTweets(self, username, last=None):
-        auth = t.OAuthHandler( self.api_key, self.api_secret)
-        auth.set_access_token(self.access_token, self.access_token_secret)
-        api = t.API(auth)
+        api = t.API(self.auth)
         self.tweets = []
         self.username = username
         try:
@@ -59,12 +64,11 @@ class ProcessTweets:
         auth = t.OAuthHandler( self.api_key, self.api_secret)
         auth.set_access_token(self.access_token, self.access_token_secret)
         api = t.API(auth)
-        self.tweets = []
         
         try:
             for sess in t.Cursor(api.search, q=searchterm, since_id=last).items(limit):
                 s = sess._json
-                self.tweets.append(s)
+                self.searchTweets.append(s)
         except Exception, e:
             print (e)
             return False
@@ -74,11 +78,21 @@ class ProcessTweets:
     def loadTweets(self, format_='json'):
         file_n = '{0}.json'.format(self.username)
         self.tweets = json.loads(open(file_n, 'r').read())
- 
-        pass
-        
-    def saveTweets(self):
-        with open(self.username, 'w') as filename:
-             print (json.dumps(self.tweets), file=filename) 
+        return True
 
-        pass         
+    def saveTweets(self):
+        tweets_to_dump = self.tweets
+        with open('{0}.json'.format(self.username), 'w') as filename:
+             print (json.dumps(tweets_to_dump), file=filename) 
+        return True
+
+    def updateUserTweets(self):
+        if self.username == None:
+            return 'Not Possible'
+
+        old_tweet_list = self.tweets 
+        self.getUserTweets(self.username, self.tweets[0]['id_str'])
+        self.tweets += old_tweet_list
+        return True
+
+        
