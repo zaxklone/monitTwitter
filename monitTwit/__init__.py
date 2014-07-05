@@ -8,12 +8,13 @@ from collections import defaultdict
 
 class ProcessTweets:
     #init method for the creditionals
-    def __init__(self, ak,ap, at, ats ):
+    def __init__(self, ak="",ap="", at="", ats="" ):
         self.api_key = ak
         self.api_secret = ap
         self.access_token = at
         self.access_token_secret = ats
 
+        self.username = 'unknown'
         self.tweets = None
         self.result = None
         self.dayDict = None
@@ -24,7 +25,7 @@ class ProcessTweets:
         auth.set_access_token(self.access_token, self.access_token_secret)
         api = t.API(auth)
         self.tweets = []
-        
+        self.username = username
         try:
             for sess in t.Cursor(api.user_timeline, screen_name=username, since_id=last).items():
                 s = sess._json
@@ -35,9 +36,10 @@ class ProcessTweets:
         return True
         
     def getUserRetweets(self):
-        nonuniq_tweets = [tweet for self.tweet in self.tweets if tweet['text'][:2] == 'RT'  ]    
+        self.result = dict()
+        non_uniq_tweets = [tweet for tweet in self.tweets if tweet['text'][:2] == 'RT'  ]    
         uniq_tweets = [tweet for tweet in self.tweets if tweet['text'][:2] != 'RT'  ]    
-        self.result['non_unique_tweets'] = nonuniq_tweets
+        self.result['non_unique_tweets'] = non_uniq_tweets 
         self.result['unique_tweets'] = uniq_tweets
         return True
 
@@ -69,7 +71,14 @@ class ProcessTweets:
         return True
      
    
-    def saveFormat(self, format_='json'):
+    def loadTweets(self, format_='json'):
+        file_n = '{0}.json'.format(self.username)
+        self.tweets = json.loads(open(file_n, 'r').read())
+ 
         pass
         
-         
+    def saveTweets(self):
+        with open(self.username, 'w') as filename:
+             print (json.dumps(self.tweets), file=filename) 
+
+        pass         
