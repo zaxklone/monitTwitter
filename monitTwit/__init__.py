@@ -2,7 +2,8 @@ from __future__ import print_function
 
 import json
 import tweepy as t
-from collections import defaultdict
+from collections import defaultdict, Counter
+import itertools
 
 
 
@@ -17,6 +18,7 @@ class ProcessTweets:
         self.searchTweets = []
         self.result = None
         self.dayDict = None
+        self.interactions = None
    
     def setAuth(self, api_key="",api_secret="", access_token="", access_token_secret="" ):
         try:
@@ -61,9 +63,7 @@ class ProcessTweets:
         return True
  
     def getSearchTweets(self, searchterm, last=None, limit=25):
-        auth = t.OAuthHandler( self.api_key, self.api_secret)
-        auth.set_access_token(self.access_token, self.access_token_secret)
-        api = t.API(auth)
+        api = t.API(self.auth)
         
         try:
             for sess in t.Cursor(api.search, q=searchterm, since_id=last).items(limit):
@@ -95,4 +95,16 @@ class ProcessTweets:
         self.tweets += old_tweet_list
         return True
 
+    def getUserInteractions(self):
+        self.getUserRetweets()
+        uniq_tweets = self.result['unique_tweets']
+        user_mentions = [tweet['entities']['user_mentions'] 
+                         for tweet in uniq_tweets
+                         if len(tweet['entities']['user_mentions']) >0]
+        merged = list(itertools.chain.from_iterable(user_mentions))
+        merge_list = [(name[u'screen_name']) for name in merged]
+        self.interactions = Counter(merge_list)
+        return True
+        
+              
         
