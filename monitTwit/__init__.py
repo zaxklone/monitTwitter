@@ -9,7 +9,7 @@ import itertools
 
 class ProcessTweets:
     #init method for the creditionals
-    def __init__(self, ak="",ap="", at="", ats="" ):
+    def __init__(self ):
 
         self.auth = None
 
@@ -19,6 +19,9 @@ class ProcessTweets:
         self.result = None
         self.dayDict = None
         self.interactions = None
+        self.hashtag_list = None
+        self.words = None
+        self.text = None
    
     def setAuth(self, api_key="",api_secret="", access_token="", access_token_secret="" ):
         try:
@@ -106,5 +109,38 @@ class ProcessTweets:
         self.interactions = Counter(merge_list)
         return True
         
+    def getHashtags(self):
+        self.getUserRetweets()
+        uniq_tweets = self.result['unique_tweets']
+
+        hashtags = [tweet['entities']['hashtags'] 
+                         for tweet in uniq_tweets
+                         if len(tweet['entities']['hashtags']) >0]
+        merged = list(itertools.chain.from_iterable(hashtags))
+        merge_list = [(name[u'text']) for name in merged]
+        self.hashtags_list = Counter(merge_list)
+        return True
               
+    def getWords(self):
         
+        self.getUserRetweets()
+        uniq_tweets = self.result['unique_tweets']
+        
+        text  = [tweet['text'] for tweet in uniq_tweets]
+        
+        merged = ' '.join(text)
+
+        merge_list = [word for word in merged.split()]
+        self.words = Counter(merge_list)
+        return True                 
+
+    def getText(self):
+        
+        self.getUserRetweets()
+        uniq_tweets = self.result['unique_tweets']
+        
+        text_array  = [tweet['text'] for tweet in uniq_tweets]
+         
+        self.text  = '\n'.join(text_array) 
+         
+        return True 
